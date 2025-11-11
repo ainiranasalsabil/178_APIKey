@@ -10,9 +10,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: '',
+  password: 'Asdfghjkl123*',
   database: 'apikey_db',
-  port: 3306
+  port: 3306 
 });
 
 db.connect((err) => {
