@@ -12,10 +12,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ===============================
 const db = mysql.createConnection({
   host: 'localhost',
-  user: 'salsa',
+  user: 'root',
   password: 'Asdfghjkl123*',
-  database: 'apikey_db',
-  port: 3306
+  database: 'api_key_db',
+  port: 3309,
 });
 
 // Cek koneksi ke MySQL
@@ -40,12 +40,10 @@ function generateApiKey() {
 // ===============================
 app.post('/create', (req, res) => {
   const apiKey = generateApiKey();
-  const description = req.body?.description || null;
 
-  // Simpan API key ke database
   db.query(
-    'INSERT INTO api_keys (api_key, description) VALUES (?, ?)',
-    [apiKey, description],
+    'INSERT INTO api_keys (api_key, created_at) VALUES (?,NOW())',
+    [apiKey],
     (err, result) => {
       if (err) {
         console.error('❌ Gagal menyimpan API key:', err);
@@ -53,10 +51,11 @@ app.post('/create', (req, res) => {
       }
 
       console.log(`✅ API Key baru disimpan ke DB: ${apiKey}`);
-      res.json({ success: true, apiKey });
+      res.status(200).json({ success: true, apiKey });
     }
   );
 });
+
 
 
 // ===============================
