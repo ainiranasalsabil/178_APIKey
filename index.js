@@ -41,3 +41,28 @@ app.post('/create', (req, res) => {
   });
 });
 
+app.post('/cekapi', (req, res) => {
+  const { apiKey } = req.body;
+  if (!apiKey) {
+    return res.status(400).json({ success: false, message: 'API key tidak boleh kosong!' });
+  }
+  const sql = 'SELECT * FROM api_keys WHERE api_key = ? LIMIT 1';
+  db.query(sql, [apiKey], (err, results) => {
+    if (err) {
+      console.error('❌ Error saat mencari API key:', err);
+      return res.status(500).json({ success: false, message: 'Terjadi kesalahan server' });
+    }
+    if (results.length > 0) {
+      console.log(`✅ API Key valid: ${apiKey}`);
+      res.json({ success: true, message: 'API key valid ✅' });
+    } else {
+      console.log(`❌ API Key tidak valid: ${apiKey}`);
+      res.status(401).json({ success: false, message: 'API key tidak valid ❌' });
+    }
+  });
+});
+
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server berjalan di http://localhost:${PORT}`);
+});
