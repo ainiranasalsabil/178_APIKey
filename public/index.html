@@ -19,4 +19,144 @@
       margin: 0;
     }
 
-    
+    /* ===== KOTAK UTAMA ===== */
+    .container {
+      background-color: #fff0f6; /* Warna lebih terang dari background */
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(255, 0, 128, 0.2); /* Bayangan lembut pink */
+      padding: 30px;
+      width: 350px;
+      text-align: center;
+      position: relative;
+    }
+
+    /* ===== JUDUL ===== */
+    h1 {
+      color: #ff4081; /* Warna utama pink */
+      margin-bottom: 20px;
+    }
+
+    /* ===== TOMBOL CREATE ===== */
+    button {
+      background-color: #ff4081;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #ff6699; /* Efek hover lebih terang */
+    }
+
+    /* ===== WRAPPER UNTUK TEXTAREA DAN TOMBOL COPY ===== */
+    .textarea-wrapper {
+      position: relative;
+      margin-top: 20px;
+    }
+
+    /* ===== KOTAK API KEY (READONLY) ===== */
+    textarea {
+      width: 100%;
+      height: 120px;
+      border: 2px solid #ff80ab;
+      border-radius: 10px;
+      padding: 10px;
+      padding-bottom: 40px; /* Memberi ruang di bawah untuk tombol copy */
+      font-size: 14px;
+      resize: none;
+      background-color: #fff;
+      color: #333;
+      box-sizing: border-box;
+    }
+
+    /* ===== TOMBOL COPY DI DALAM TEXTAREA ===== */
+    #btnCopy {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background-color: #ff4081;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      font-size: 12px;
+      padding: 5px 10px;
+      cursor: pointer;
+      display: none; /* Disembunyikan sampai API key muncul */
+      transition: background-color 0.3s ease;
+      box-shadow: 0 2px 5px rgba(255, 0, 128, 0.2);
+    }
+
+    #btnCopy:hover {
+      background-color: #ff6699;
+    }
+
+    /* ===== PESAN SUKSES COPY ===== */
+    .copy-success {
+      color: #4caf50;
+      margin-top: 10px;
+      font-size: 14px;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ===== KONTAINER UTAMA ===== -->
+  <div class="container">
+    <h1>Buat API Key</h1>
+    <!-- Tombol untuk generate API key -->
+    <button id="btnBuat" onclick="buatApiKey()">Create API Key</button>
+
+    <!-- Area untuk menampilkan API key -->
+    <div class="textarea-wrapper">
+      <textarea id="apikey" readonly placeholder="API Key akan muncul di sini..."></textarea>
+      <button id="btnCopy" onclick="copyApiKey()">📋 Copy</button>
+    </div>
+
+    <!-- Pesan notifikasi copy sukses -->
+    <p class="copy-success" id="copySuccess">✅ API Key berhasil disalin!</p>
+  </div>
+
+  <script>
+    /* ===== FUNGSI UNTUK MEMBUAT API KEY DARI SERVER ===== */
+    async function buatApiKey() {
+      const textarea = document.getElementById('apikey');
+      const button = document.getElementById('btnBuat');
+      const copyButton = document.getElementById('btnCopy');
+      const copySuccess = document.getElementById('copySuccess');
+      
+      // Saat proses berjalan, tombol dinonaktifkan
+      button.disabled = true;
+      button.textContent = "Memproses...";
+      textarea.value = "";
+      copyButton.style.display = "none";
+      copySuccess.style.display = "none";
+
+      try {
+        // Kirim permintaan POST ke server Express (endpoint /create)
+        const response = await fetch('/create', { method: 'POST' });
+        const data = await response.json();
+
+        // Jika berhasil, tampilkan API key di textarea
+        if (data.apiKey) {
+          textarea.value = data.apiKey;
+          copyButton.style.display = "block"; // munculkan tombol copy
+        } else {
+          textarea.value = "Gagal membuat API Key.";
+        }
+      } catch (err) {
+        // Jika terjadi error koneksi atau server
+        textarea.value = "Terjadi kesalahan: " + err.message;
+      } finally {
+        // Kembalikan tombol ke kondisi semula
+        button.disabled = false;
+        button.textContent = "Create API Key";
+      }
+    }
+
+   
