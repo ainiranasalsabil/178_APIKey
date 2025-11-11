@@ -2,66 +2,90 @@ const express = require('express');
 const crypto = require('crypto');
 const path = require('path');
 const mysql = require('mysql2');
-const app = express();
 
+const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ===============================
+// 🔗 KONFIGURASI DATABASE
+// ===============================
 const db = mysql.createConnection({
   host: 'localhost',
-  user: 'root',
+  user: 'salsa',
   password: 'Asdfghjkl123*',
   database: 'apikey_db',
-  port: 3306 
+  port: 3306
 });
 
+// Cek koneksi ke MySQL
 db.connect((err) => {
   if (err) {
-    console.error('❌ Gagal terhubung ke database:', err);
+    console.error('❌ Koneksi ke MySQL gagal:', err);
   } else {
-    console.log('✅ Koneksi ke MySQL berhasil!');
+    console.log('✅ Terkoneksi ke MySQL (api_key_db)');
   }
 });
 
+// ===============================
+// 🔑 FUNGSI GENERATE API KEY
+// ===============================
 function generateApiKey() {
-  const randomBytes = crypto.randomBytes(8).toString('hex');
+  const randomBytes = crypto.randomBytes(8).toString('hex'); // 16 karakter hex
   return `sk-sm-v1-${randomBytes}`;
 }
 
+// ===============================
+// 📦 ENDPOINT BUAT API KEY
+// ===============================
 app.post('/create', (req, res) => {
   const apiKey = generateApiKey();
-  const sql = 'INSERT INTO api_keys (api_key) VALUES (?)';
-  db.query(sql, [apiKey], (err, result) => {
-    if (err) {
-      console.error('❌ Gagal menyimpan API key ke database:', err);
-      return res.status(500).json({ success: false, message: 'Gagal menyimpan API key ke database' });
+  const description = req.body?.description || null;
+
+  // Simpan API key ke database
+  db.query(
+    'INSERT INTO api_keys (api_key, description) VALUES (?, ?)',
+    [apiKey, description],
+    (err, result) => {
+      if (err) {
+        console.error('❌ Gagal menyimpan API key:', err);
+        return res.status(500).json({ success: false, message: 'Gagal menyimpan API key' });
+      }
+
+      console.log(`✅ API Key baru disimpan ke DB: ${apiKey}`);
+      res.json({ success: true, apiKey });
     }
-    console.log(`✅ API Key baru dibuat dan disimpan: ${apiKey}`);
-    res.json({ success: true, apiKey });
-  });
+  );
 });
 
+
+// ===============================
+// 🔍 ENDPOINT CEK API KEY
+// ===============================
 app.post('/cekapi', (req, res) => {
   const { apiKey } = req.body;
+
   if (!apiKey) {
     return res.status(400).json({ success: false, message: 'API key tidak boleh kosong!' });
   }
-  const sql = 'SELECT * FROM api_keys WHERE api_key = ? LIMIT 1';
-  db.query(sql, [apiKey], (err, results) => {
+
+  db.query('SELECT * FROM api_keys WHERE api_key = ?', [apiKey], (err, results) => {
     if (err) {
-      console.error('❌ Error saat mencari API key:', err);
-      return res.status(500).json({ success: false, message: 'Terjadi kesalahan server' });
+      console.error('❌ Error saat cek API key:', err);
+      return res.status(500).json({ success: false, message: 'Kesalahan server' });
     }
+
     if (results.length > 0) {
-      console.log(`✅ API Key valid: ${apiKey}`);
       res.json({ success: true, message: 'API key valid ✅' });
     } else {
-      console.log(`❌ API Key tidak valid: ${apiKey}`);
       res.status(401).json({ success: false, message: 'API key tidak valid ❌' });
     }
   });
 });
 
+// ===============================
+// 🚀 JALANKAN SERVER
+// ===============================
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server berjalan di http://localhost:${PORT}`);
