@@ -28,3 +28,16 @@ function generateApiKey() {
   return `sk-sm-v1-${randomBytes}`;
 }
 
+app.post('/create', (req, res) => {
+  const apiKey = generateApiKey();
+  const sql = 'INSERT INTO api_keys (api_key) VALUES (?)';
+  db.query(sql, [apiKey], (err, result) => {
+    if (err) {
+      console.error('❌ Gagal menyimpan API key ke database:', err);
+      return res.status(500).json({ success: false, message: 'Gagal menyimpan API key ke database' });
+    }
+    console.log(`✅ API Key baru dibuat dan disimpan: ${apiKey}`);
+    res.json({ success: true, apiKey });
+  });
+});
+
